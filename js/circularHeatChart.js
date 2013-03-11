@@ -3,8 +3,9 @@ function circularHeatChart() {
     innerRadius = 50,
     numSegments = 24,
     segmentHeight = 20,
-    domain = null,
-    range = ["white", "red"],
+    domain = [0, 6],
+    top_range = ["white", "red"],
+    bottom_range = ["white", "black"],
     accessor = function(d) {return d;},
     radialLabels = segmentLabels = [];
 
@@ -22,14 +23,21 @@ function circularHeatChart() {
                 domain = d3.extent(data, accessor);
                 autoDomain = true;
             }
-            var color = d3.scale.linear().domain(domain).range(range);
+            var color = function(d, angle) {
+                if(Math.ceil((angle - (d * (2 * Math.PI)))) > Math.PI){
+                    return d3.scale.linear().domain(domain).range(top_range)(d);
+                } else {
+                    return d3.scale.linear().domain(domain).range(bottom_range)(d);
+                }
+
+            }
             if(autoDomain)
                 domain = null;
 
             g.selectAll("path").data(data)
                 .enter().append("path")
                 .attr("d", d3.svg.arc().innerRadius(ir).outerRadius(or).startAngle(sa).endAngle(ea))
-                .attr("fill", function(d) {return color(accessor(d));});
+                .attr("fill", function(d, i) {return color(Math.floor(i / numSegments), sa(d, i));});
 
 
             // Unique id so that the text path defs are unique - is there a better way to do this?
